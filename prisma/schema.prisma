@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,7 +17,7 @@ model account {
 }
 
 model board {
-  boardNo   BigInt    @default(autoincrement()) @unique
+  boardNo   BigInt    @unique @default(autoincrement())
   writer    String    @db.VarChar(10)
   title     String    @db.VarChar(20)
   content   String    @db.Text
@@ -28,7 +25,7 @@ model board {
   writeDate DateTime  @db.Date
   account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, map: "FK_account_TO_board_1")
   comment   comment[]
-  image     image[]   @ignore
+  image     image?
 
   @@id([boardNo, writer])
   @@index([writer], map: "FK_account_TO_board_1")
@@ -50,18 +47,17 @@ model memberofteam {
   memberBoardNo    BigInt  @id @default(autoincrement())
   memberName       String  @db.VarChar(20)
   introduceContent String? @db.Text
-  image            image[] @ignore
+  image            image?
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model image {
-  boardNo       BigInt?
-  memberBoardNo BigInt?
-  fileName      String        @db.VarChar(50)
+  boardNo       BigInt?       @unique
+  memberBoardNo BigInt?       @unique
+  fileName      String        @id @db.VarChar(50)
   board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_board_TO_image_1")
   memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_memberOfTeam_TO_image_1")
 
   @@index([boardNo], map: "FK_board_TO_image_1")
   @@index([memberBoardNo], map: "FK_memberOfTeam_TO_image_1")
-  @@ignore
 }

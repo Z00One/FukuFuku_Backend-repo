@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const { hashing } = require('../utils/hashing.js');
 const prisma = new PrismaClient();
 
 const { hashing } = require('../utils/hashings');
@@ -28,7 +29,6 @@ module.exports = {
     if (isAuthenticParameter.isNotMatch) {
       return isAuthenticParameter.message;
     };
-    // console.log(userId, userPassword)
     try {
       const account = await prisma.account.findFirst({
         where: {
@@ -80,5 +80,5 @@ module.exports = {
       console.log(error);
       return status.InternalServerError;
     }
-  },
+  }
 }

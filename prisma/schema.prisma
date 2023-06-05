@@ -10,7 +10,7 @@ datasource db {
 model account {
   nickname     String    @id @db.VarChar(10)
   userId       String    @db.VarChar(10)
-  userPassword String    @db.VarChar(10)
+  userPassword String    @db.VarChar(100)
   isAdmin      Boolean?
   board        board[]
   comment      comment[]

@@ -1,6 +1,8 @@
 const TOKEN_EXPIRED = -3;
 const TOKEN_INVALID = -2;
 
+const accountController = require('../controllers/accountController');
+
 const jwt = require('../modules/jwt')
 const status = require('../utils/status')
 
@@ -12,7 +14,7 @@ module.exports = {
             return res.status(status.Unauthorized.status).json(status.Unauthorized)
         }
         const decodedToken = await jwt.verify(token);
-        
+
         if (decodedToken === TOKEN_EXPIRED) {
             return res.status(status.Unauthorized.status).json({ message: 'TOKEN_EXPIRED' })
         }
@@ -25,12 +27,16 @@ module.exports = {
     },
 
     // 관리자 권한 체크
-    isAdmin: (req, res, next) => {
+    isAdmin: async (req, res, next) => {
         // header는 대소문자 구분하지 않음
-        const { isadmin } = req.headers;
-        console.log(isadmin)
-        if (!isadmin) {
-            return res.status(status.Unauthorized.status).json(status.Unauthorized);
+        const { token } = req.headers;
+
+        const decodedToken = await jwt.verify(token);
+
+        const isAdmin = await accountController.isAdmin(decodedToken?.nickname);
+
+        if (isAdmin.status != 200) {
+            return isAdmin
         }
         // 관리자
         next();

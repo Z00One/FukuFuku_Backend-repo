@@ -52,9 +52,10 @@ model memberofteam {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model image {
+  id            Int           @id @default(autoincrement())
   boardNo       BigInt?       @unique
   memberBoardNo BigInt?       @unique
-  fileName      String        @id @db.VarChar(50)
+  fileName      String        @db.VarChar(100)
   board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_board_TO_image_1")
   memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_memberOfTeam_TO_image_1")
 

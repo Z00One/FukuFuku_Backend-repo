@@ -1,12 +1,13 @@
 const router = require('express').Router();
 const auth = require('../../middlewares/auth')
-const memberOfTeamController = require('../../controllers/memberOfTeamController/');
+const memberOfTeamController = require('../../controllers/memberOfTeamController');
 
 module.exports = () => {
 
   router.get('/', async (req, res) => {
     const allMember = await memberOfTeamController.getAllMember();
-    res.status(allMember.status).json(allMember);
+    console.log('############')
+    res.status(allMember.status).json(allMember.data);
   })
 
   router.route('/member')

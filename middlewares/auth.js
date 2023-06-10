@@ -30,15 +30,35 @@ module.exports = {
     isAdmin: async (req, res, next) => {
         // header는 대소문자 구분하지 않음
         const { token } = req.headers;
-
+        
         const decodedToken = await jwt.verify(token);
-
+        
         const isAdmin = await accountController.isAdmin(decodedToken?.nickname);
-
+        
         if (isAdmin.status != 200) {
-            return isAdmin
+            return res.status(isAdmin.status).json(isAdmin);
         }
         // 관리자
+        next();
+    },
+    
+    // 유저 본인 확인
+    personalAuth: async (req, res, next) => {
+        const { token } = req.headers;
+        const { nickname } = req.body;
+
+        if ( !(token && nickname) ) {
+            return res.status(status.UnprocessableEntity.status).json(status.UnprocessableEntity);
+        }
+        
+        const decodedToken = await jwt.verify(token);
+
+        console.log(decodedToken)
+        // 다른 경우
+        if (nickname != decodedToken.nickname) {
+            return res.status(status.Unauthorized.status).json(status.Unauthorized);
+        }
+        
         next();
     }
 }

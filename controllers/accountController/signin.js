@@ -16,8 +16,12 @@ module.exports = (prisma, status, parameterChecker, hashing, jwt) =>
         const jwtToken = await jwt.sign(account);
         const result = account.isAdmin ? {
           token: jwtToken.token,
-          isAdmin: true
-        } : { token: jwtToken.token };
+          isAdmin: true,
+          nickname: account.nickname
+        } : {
+          token: jwtToken.token,
+          nickname: account.nickname
+        };
 
         return {
           status: 200,

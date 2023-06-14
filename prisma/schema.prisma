@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -12,8 +13,8 @@ model account {
   userId       String    @db.VarChar(10)
   userPassword String    @db.VarChar(100)
   isAdmin      Boolean?
-  board        board[]
-  comment      comment[]
+  boards       board[]
+  comments     comment[]
 }
 
 model board {
@@ -21,26 +22,25 @@ model board {
   writer    String    @db.VarChar(10)
   title     String    @db.VarChar(20)
   content   String    @db.Text
-  hit       BigInt
-  writeDate DateTime  @db.Date
-  account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, map: "FK_account_TO_board_1")
-  comment   comment[]
-  image     image?
+  hit       BigInt    @default(0)
+  writeDate DateTime  @default(now())
+  account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, onUpdate: Cascade)
+  comments  comment[]
+  images    image[]   
 
   @@id([boardNo, writer])
-  @@index([writer], map: "FK_account_TO_board_1")
 }
 
 model comment {
+  id          BigInt      @unique @default(autoincrement())
   boardNo     BigInt
   nickname    String   @db.VarChar(30)
   comment     String   @db.Text
   commentDate DateTime @db.DateTime(0)
-  account     account  @relation(fields: [nickname], references: [nickname], onDelete: Cascade, map: "FK_account_TO_comment_1")
-  board       board    @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_board_TO_comment_1")
+  account     account  @relation(fields: [nickname], references: [nickname], onDelete: Cascade, onUpdate:Cascade)
+  board       board    @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade)
 
-  @@id([boardNo, nickname])
-  @@index([nickname], map: "FK_account_TO_comment_1")
+  @@id([id, boardNo])
 }
 
 model memberofteam {
@@ -53,12 +53,9 @@ model memberofteam {
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model image {
   id            Int           @id @default(autoincrement())
-  boardNo       BigInt?       @unique
+  boardNo       BigInt        @db.BigInt
   memberBoardNo BigInt?       @unique
   fileName      String        @db.VarChar(100)
-  board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_board_TO_image_1")
-  memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade, onUpdate: NoAction, map: "FK_memberOfTeam_TO_image_1")
-
-  @@index([boardNo], map: "FK_board_TO_image_1")
-  @@index([memberBoardNo], map: "FK_memberOfTeam_TO_image_1")
+  board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade)
+  memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade)
 }

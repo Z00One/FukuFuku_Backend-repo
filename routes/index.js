@@ -1,9 +1,15 @@
+const auth = require('../middlewares/auth');
+
 const routers = {
-  main: require('./main/'),
-  signin: require('./signIn')
-}
+  memberOfTeam: require('./memberOfTeam'),
+  account: require('./account'),
+  board: require('./board'),
+  comment: require('./comment')
+};
 
 module.exports = (app) => {
-  app.use('/', routers.main());
-  app.use('/signin', routers.signin());
-}
+  app.use('/', routers.memberOfTeam(auth));
+  app.use('/account', routers.account(auth));
+  app.use('/board', routers.board(auth));
+  app.use('/comment', routers.comment(auth));
+};

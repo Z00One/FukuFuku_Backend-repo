@@ -23,7 +23,7 @@ model board {
   title     String    @db.VarChar(20)
   content   String    @db.Text
   hit       BigInt    @default(0)
-  writeDate DateTime  @default(now())
+  writeDate DateTime  @db.DateTime(0)
   account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, onUpdate: Cascade)
   comments  comment[]
   images    postImage[]   
@@ -52,8 +52,8 @@ model memberofteam {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model memberImage {
-  id            Int           @id @default(autoincrement())
-  memberBoardNo BigInt?       @unique
+  memberBoardNo BigInt        @unique
+  fileName      String        @id @db.VarChar(100)
   memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade)
 }
 

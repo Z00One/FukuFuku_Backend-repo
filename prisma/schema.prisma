@@ -23,16 +23,16 @@ model board {
   title     String    @db.VarChar(20)
   content   String    @db.Text
   hit       BigInt    @default(0)
-  writeDate DateTime  @default(now())
+  writeDate DateTime  @db.DateTime(0)
   account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, onUpdate: Cascade)
   comments  comment[]
-  images    image[]   
+  images    postImage[]   
 
   @@id([boardNo, writer])
 }
 
 model comment {
-  id          BigInt      @unique @default(autoincrement())
+  id          BigInt   @unique @default(autoincrement())
   boardNo     BigInt
   nickname    String   @db.VarChar(30)
   comment     String   @db.Text
@@ -47,15 +47,18 @@ model memberofteam {
   memberBoardNo    BigInt  @id @default(autoincrement())
   memberName       String  @db.VarChar(20)
   introduceContent String? @db.Text
-  image            image?
+  image            memberImage?
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model image {
-  id            Int           @id @default(autoincrement())
-  boardNo       BigInt        @db.BigInt
-  memberBoardNo BigInt?       @unique
-  fileName      String        @db.VarChar(100)
-  board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade)
+model memberImage {
+  memberBoardNo BigInt        @unique
+  fileName      String        @id @db.VarChar(100)
   memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade)
+}
+
+model postImage {
+  boardNo       BigInt        @db.BigInt
+  fileName      String        @id @db.VarChar(100)
+  board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: Cascade)
 }

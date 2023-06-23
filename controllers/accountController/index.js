@@ -3,12 +3,14 @@ const prisma = new PrismaClient();
 
 const jwt = require('../../modules/jwt');
 const status = require('../../utils/status');
-const { hashing } = require('../../utils/hashings');
+const { hashing } = require('../../utils/hashing');
 const parameterChecker = require('../../utils/parameterChecker');
 
 module.exports = {
-  idCheck: require('./idCheck')(prisma, status, parameterChecker),
+  check: require('./check')(prisma, status),
   signin: require('./signin')(prisma, status, parameterChecker, hashing, jwt),
-  signup: require('./signup')(prisma, status, parameterChecker, hashing),
+  signUp: require('./signUp')(prisma, status, parameterChecker, hashing),
   isAdmin: require('./isAdmin')(prisma, status),
-}
+  withdrawal: require('./withdrawal')(prisma, status, parameterChecker),
+  updateUserId: require('./updateUserId')(prisma, status)
+};

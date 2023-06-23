@@ -5,29 +5,33 @@ module.exports = (prisma, status, parameterChecker, hashing, jwt) =>
     if (isAuthenticParameter.isNotMatch) {
       return isAuthenticParameter.message;
     };
+
     try {
       const account = await prisma.account.findFirst({
         where: {
           userId: userId
         },
       });
+
       if (account && account.userPassword === hashing(userPassword)) {
         // account의 nickname 을 통해 토큰을 생성
         const jwtToken = await jwt.sign(account);
         const result = account.isAdmin ? {
           token: jwtToken.token,
+          nickname: account.nickname,
+          userId: account.userId,
           isAdmin: true,
-          nickname: account.nickname
         } : {
           token: jwtToken.token,
-          nickname: account.nickname
+          nickname: account.nickname,
+          userId: account.userId
         };
 
         return {
           status: 200,
           data: result
-        }
-      }
+        };
+      };
 
       return status.BadRequest;
 
@@ -35,5 +39,5 @@ module.exports = (prisma, status, parameterChecker, hashing, jwt) =>
     catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
-  }
+    };
+  };

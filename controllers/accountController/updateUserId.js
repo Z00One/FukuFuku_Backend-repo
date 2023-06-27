@@ -2,9 +2,9 @@ module.exports = (prisma, status) =>
   async(req, res) => {
     const nickname = req.headers.nickname;
 
-    const { userId } = req.body;
+    const { userId, userPassword } = req.body;
     
-    if (!userId) {
+    if (!userId || !userPassword) {
       return status.UnprocessableEntity;
     };
 

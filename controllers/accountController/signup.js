@@ -1,3 +1,5 @@
+const CONFLICT_ERROR_CODE = 'P2002';
+
 module.exports = (prisma, status, parameterChecker, hashing) =>
   async (req, res) => {
     const { userId, userPassword, nickname } = req.body;
@@ -14,14 +16,19 @@ module.exports = (prisma, status, parameterChecker, hashing) =>
           nickname: nickname // 닉네임 중복은 db상에서 UniqueKey로 존재하므로 중복시 account 생성이 불가능함
         },
       });
-      if (!account) {
-        return status.Conflict;
-      }
 
-      return status.Created
+      return status.Created;
 
     } catch (error) { // 에러 발생
       console.log(error);
-      return status.InternalServerError;
-    }
-  }
+
+      if (error?.code == CONFLICT_ERROR_CODE) {
+        return status.Conflict;
+      };
+
+      return {
+        status: status.InternalServerError.status,
+        error: error
+      };
+    };
+  };

@@ -8,7 +8,6 @@ module.exports = {
   // 토큰 발급
   sign: async (account) => {
     const nickname = account.nickname;
-    console.log(nickname)
     const payload = {
       nickname: nickname,
     };

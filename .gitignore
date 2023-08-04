@@ -1,5 +1,7 @@
+.gitignore
 .env
 node_modules/
 .gitmessage.txt
 config/
 test.js
+Dockerfile

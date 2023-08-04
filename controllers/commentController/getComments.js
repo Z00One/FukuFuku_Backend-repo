@@ -1,4 +1,4 @@
-module.exports = (prisma, status) =>
+module.exports = (prisma, status, serializing) =>
   async (boardNo) => {
     // 댓글
     try {
@@ -15,12 +15,7 @@ module.exports = (prisma, status) =>
         }
       });
 
-      const serializedComments = JSON.stringify(comments, (key, value) => {
-        if (typeof value === 'bigint') {
-          return Number(value); // BigInt to Number
-        }
-        return value;
-      });
+      const serializedComments = serializing(comments);
 
       return {
         status: 200,

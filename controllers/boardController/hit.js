@@ -15,8 +15,6 @@ module.exports = (prisma, status) =>
         }
       });
 
-      console.log('hit');
-
     } catch (error) {
       console.log(error);
     };

@@ -28,8 +28,8 @@ module.exports = (auth) => {
     res.status(result.status).json(result);
   });
   
-  router.put('/updateNickname', auth.isUser, auth.personalAuth, async (req, res) => {
-    const result = await accountController.updateNickname(req, res);
+  router.put('/updateUserId', auth.isUser, auth.personalAuth, async (req, res) => {
+    const result = await accountController.updateUserId(req, res);
     res.status(result.status).json(result);
   })
 

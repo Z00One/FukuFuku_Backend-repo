@@ -1,47 +1,72 @@
-module.exports = (prisma, status, parameterChecker) =>
-  async (writer, title, content, images) => {
+const koreaTime = require('../../utils/koreaTime')();
+
+module.exports = (prisma, status, parameterChecker, serializing) =>
+  async (req, res) => {
+    const { nickname } = req.headers;
+    const { title, content } = req.body;
+    const images = req.files;
+
+    const isAuthenticParameter = parameterChecker(nickname, title, content);
+    if (isAuthenticParameter.isNotMatch) {
+      return isAuthenticParameter.message;
+    };
+
     try {
-      const isAuthenticParameter = parameterChecker(writer, title, content);
-      if (isAuthenticParameter.isNotMatch) {
-        return isAuthenticParameter.message;
-      };
       // 게시글 만들기
       const post = await prisma.board.create({
         data: {
-          writer: writer,
+          writer: nickname,
           title: title,
           content: content,
-          hit: 0n
+          hit: 0n,
+          writeDate: koreaTime
         }
       });
-      
-      const boardNo = post.boardNo
-      // 파라미터에 값이 없으면 로고이미지로 등록 
-      if (!images.length) {
-        await prisma.image.create({
-          data: {
-            boardNo: boardNo,
-            fileName: 'https://yju-fukufuku.s3.us-east-1.amazonaws.com/fKrhHv7mY.png',
+
+      const boardNo = BigInt(post.boardNo);
+      let newPostImages;
+
+      if (images?.length) {
+
+        const imageRecords = images.map((image) => ({
+          boardNo: boardNo,
+          fileName: image.location,
+        }));
+
+        await prisma.postImage.createMany({
+          data: imageRecords,
+          skipDuplicates: false,
+        });
+
+        const _boardNo = [boardNo];
+
+        newPostImages = await prisma.postImage.findMany({
+          where: {
+            boardNo: {
+              in: _boardNo
+            }
           }
         });
-        
-        return status.Created;
-      };
-      
-      const imageRecords = images.map((image) => ({
-        boardNo: boardNo,
-        fileName: image.location,
-      }));
+      }
 
-      await prisma.image.createMany({
-        data: imageRecords,
-        skipDuplicates: true,
-      });
-      
-      return status.Created;
-      
+      console.log(newPostImages)
+
+      if (newPostImages?.length) {
+
+        const imageUrls = newPostImages.map((image) => image.fileName);
+        
+        post.fileName = imageUrls;
+      }
+
+      const serializedPost = serializing(post);
+
+      return {
+        status: 201,
+        data: serializedPost
+      };
+
     } catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
-  }
+    };
+  };

@@ -1,9 +1,12 @@
 module.exports = (prisma, status) =>
   async (boardNo, nickname) => {
+
     try {
+      const _boardNo = BigInt(boardNo);
+
       const post = await prisma.board.findFirst({
         where: {
-          boardNo: BigInt(boardNo)
+          boardNo: _boardNo
         }
       });
 
@@ -11,9 +14,17 @@ module.exports = (prisma, status) =>
         return status.NotFound;
       };
 
+      const account = await prisma.account.findFirst({
+        where: {
+          nickname: nickname
+        }
+      });
+
+      const isAdmin = account?.isAdmin;
+
       const isOwner = nickname == post.writer;
 
-      if (isOwner) {
+      if (isOwner || isAdmin) {
         return status.OK;
       };
 

@@ -1,6 +1,6 @@
 const NOT_FOUND_ERROR = 'P2025';
 
-module.exports = (prisma, status, parameterChecker) =>
+module.exports = (prisma, status, parameterChecker, serializing) =>
   async (req, res) => {
     const { id, comment } = req.body;
 
@@ -22,12 +22,7 @@ module.exports = (prisma, status, parameterChecker) =>
         }
       });
 
-      const serializedComment = JSON.stringify(_comment, (key, value) => {
-        if (typeof value === 'bigint') {
-          return Number(value); // BigInt to Number
-        }
-        return value;
-      });
+      const serializedComment = serializing(_comment);
 
       return {
         status: status.Created.status,

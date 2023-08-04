@@ -1,4 +1,4 @@
-const dotenv = require('dotenv').config();
+require('dotenv').config();
 const { S3Client } = require("@aws-sdk/client-s3");
 const shortId = require('shortid');
 const multer = require('multer');
@@ -11,7 +11,7 @@ const upload = multer({
         accessKeyId: process.env.S3_ACCESS_KEY,
         secretAccessKey: process.env.S3_SECRET_KEY,
       },
-      region: 'us-east-1',
+      region: process.env.S3_REGION,
     }),
     bucket: process.env.BUCKET_NAME,
     contentType: multerS3.AUTO_CONTENT_TYPE,

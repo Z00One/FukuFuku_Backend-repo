@@ -1,6 +1,6 @@
-// 닉네임, 내용 요청
-// boardNo, nickname, comment 받아서 처리
-module.exports = (prisma, status, parameterChecker) =>
+const koreaTime = require('../../utils/koreaTime')();
+
+module.exports = (prisma, status, parameterChecker, serializing) =>
   async (req, res) => {
     const { nickname } = req.headers;
     const { boardNo, comment } = req.body;
@@ -11,23 +11,19 @@ module.exports = (prisma, status, parameterChecker) =>
     };
 
     try {
+      const _boardNo = BigInt(boardNo); 
       // db 등록
       const newComment = await prisma.comment.create({
         data: {
-          boardNo: boardNo,
+          boardNo: _boardNo,
           nickname: nickname,
           comment: comment,
-          commentDate: new Date()
+          commentDate: koreaTime
         }
       });
 
-      const serializedComment = JSON.stringify(newComment, (key, value) => {
-        if (typeof value === 'bigint') {
-          return Number(value); // BigInt to Number
-        }
-        return value;
-
-      });
+      const serializedComment = serializing(newComment);
+      
       return {
         status: 200,
         data: serializedComment

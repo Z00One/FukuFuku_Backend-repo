@@ -1,11 +1,14 @@
-module.exports = (prisma, status, parameterChecker) =>
-  async (memberName, introduceContent, fileName) => {
-    // 맴버 추가
+module.exports = (prisma, status, parameterChecker, serializing) =>
+  async (req, res) => {
+    const { memberName, introduceContent } = req.body;
+    const image = req.files;
+
+    const isAuthenticParameter = parameterChecker(memberName, introduceContent);
+    if (isAuthenticParameter.isNotMatch) {
+      return isAuthenticParameter.message;
+    };
+
     try {
-      const isAuthenticParameter = parameterChecker(memberName, introduceContent, fileName);
-      if (isAuthenticParameter.isNotMatch) {
-        return isAuthenticParameter.message;
-      };
       // 조원 추가
       const member = await prisma.memberofteam.create({
         data: {
@@ -13,19 +16,41 @@ module.exports = (prisma, status, parameterChecker) =>
           introduceContent: introduceContent
         }
       });
-      // 사진 추가
+
       const memberBoardNo = member.memberBoardNo;
-      const addImage = await prisma.image.create({
+
+      // 파라미터에 값이 없으면 로고이미지로 등록
+      if (!image) {
+        await prisma.memberImage.create({
+          data: {
+            memberBoardNo: memberBoardNo,
+            fileName: process.env.LOGO_IMAGE,
+          }
+        });
+      };
+
+      // 사진 저장 주소
+      const fileUrl = image[0].location;
+
+      // 사진 추가
+      const addImage = await prisma.memberImage.create({
         data: {
           memberBoardNo: memberBoardNo,
-          fileName: fileName,
+          fileName: fileUrl
         }
       });
 
-      return status.Created;
+      member.fileName = fileUrl;
+
+      const serializedMember = serializing(member);
+
+      return {
+        status: status.Created.status,
+        data: serializedMember
+      };
 
     } catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
-  }
+    };
+  };

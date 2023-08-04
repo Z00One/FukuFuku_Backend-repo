@@ -1,11 +1,14 @@
-module.exports = (prisma, status, parameterChecker, numberConverter) =>
-  async (memberBoardNo, memberName, introduceContent, fileName) => {
-    const isAuthenticParameter = parameterChecker(memberBoardNo, memberName, introduceContent, fileName);
-    if (isAuthenticParameter.isNotMatch) {
-      return isAuthenticParameter.message;
-    };
-    const _memberBoardNo = numberConverter(memberBoardNo);
+module.exports = (prisma, status, serializing) =>
+  async (req, res) => {
+    const { memberBoardNo, memberName, introduceContent } = req.body;
+    // 파라미터에 값이 있을 때에만 업데이트
     try {
+      if (!(memberName || introduceContent)) {
+        return status.NoContent;
+      };
+
+      const _memberBoardNo = BigInt(memberBoardNo);
+
       const member = await prisma.memberofteam.update({
         where: {
           memberBoardNo: _memberBoardNo,
@@ -14,26 +17,22 @@ module.exports = (prisma, status, parameterChecker, numberConverter) =>
           memberName: memberName,
           introduceContent: introduceContent
         },
-        rejectOnNotFound: false, // 레코드가 없을 경우 에러 발생하지 않음
+        rejectOnNotFound: false,
       });
 
       if (!member) {
         return status.NotFound;
-      }
+      };
 
-      await prisma.image.update({
-        where: {
-          memberBoardNo: _memberBoardNo,
-        },
-        data: {
-          fileName: fileName,
-        },
-      });
+      const serializedMember = serializing(member);
 
-      return status.Created;
+      return {
+        status: status.Created.status,
+        data: serializedMember
+      };
 
     } catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
-  }
+    };
+  };

@@ -1,17 +1,24 @@
 require('dotenv').config();
 const deleteClient = require('../../modules/deleteObject');
 
-module.exports = (prisma, status, parameterChecker, numberConverter, extractKeyFromLocation) =>
-  async (memberBoardNo, image) => {
-    const isAuthenticParameter = parameterChecker(memberBoardNo);
+module.exports = (prisma, status, parameterChecker, extractKeyFromLocation) =>
+  async (req, res) => {
+    const { memberboardno } = req.headers;
+    const image = req.files;
+
+    const isAuthenticParameter = parameterChecker(memberboardno);
     if (isAuthenticParameter.isNotMatch) {
       return isAuthenticParameter.message;
+    };
+
+    if (!image.length) {
+      return status.UnprocessableEntity
     };
 
     const _image = image[0];
 
     try {
-      const _memberBoardNo = numberConverter(memberBoardNo);
+      const _memberBoardNo = BigInt(memberboardno);
       const isExist = await prisma.memberofteam.findFirst({
         where: {
           memberBoardNo: _memberBoardNo,
@@ -22,7 +29,7 @@ module.exports = (prisma, status, parameterChecker, numberConverter, extractKeyF
         return status.NotFound;
       };
 
-      const prevImage = await prisma.image.findFirst({
+      const prevImage = await prisma.memberImage.findFirst({
         where: {
           memberBoardNo: _memberBoardNo
         }
@@ -39,7 +46,7 @@ module.exports = (prisma, status, parameterChecker, numberConverter, extractKeyF
       };
 
       if (prevKey && _image.key != prevKey) {
-        await prisma.image.delete({
+        await prisma.memberImage.delete({
           where: {
             memberBoardNo: _memberBoardNo,
           }
@@ -56,7 +63,7 @@ module.exports = (prisma, status, parameterChecker, numberConverter, extractKeyF
 
       // 파라미터에 값이 없으면 로고이미지로 등록
       if (!_image) {
-        await prisma.image.create({
+        await prisma.memberImage.create({
           data: {
             memberBoardNo: _memberBoardNo,
             fileName: process.env.LOGO_IMAGE,
@@ -66,18 +73,21 @@ module.exports = (prisma, status, parameterChecker, numberConverter, extractKeyF
 
       // DB에 새로 생긴 이미지 넣기
       else {
-        await prisma.image.create({
+        await prisma.memberImage.create({
           data: {
             memberBoardNo: _memberBoardNo,
             fileName: _image.location
           }
         });
       };
-
-      return status.Created;
+      
+      return {
+        status: status.Created.status,
+        data: _image.location
+      };
 
     } catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
+    };
   };

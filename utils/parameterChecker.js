@@ -9,5 +9,6 @@ module.exports = (...args) => {
       }
     };
   };
+
   return { isNotMatch: hasUndefined };
-}
+};

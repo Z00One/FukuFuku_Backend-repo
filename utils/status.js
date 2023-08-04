@@ -17,7 +17,7 @@ module.exports = {
   },
   NotFound: {
     status: 404,
-    message: 'Requested resource not found.',
+    message: 'Requested resource not found',
   },
   Unauthorized: {
     status: 401,
@@ -29,10 +29,10 @@ module.exports = {
   },
   UnprocessableEntity: {
     status: 422,
-    message: 'Unprocessable Entity',
+    message: 'Requested resource does not match the parameter',
   },
   InternalServerError: {
     status: 500,
-    message: 'Internal Server Error',
+    message: "Internal Server Error"
   },
 };

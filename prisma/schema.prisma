@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  nickname     String    @id @db.VarChar(10)
+  userId       String    @db.VarChar(10)
+  userPassword String    @db.VarChar(100)
+  isAdmin      Boolean?
+  boards       board[]
+  comments     comment[]
+}
+
+model board {
+  boardNo   BigInt    @unique @default(autoincrement())
+  writer    String    @db.VarChar(10)
+  title     String    @db.VarChar(20)
+  content   String    @db.Text
+  hit       BigInt    @default(0)
+  writeDate DateTime  @db.DateTime(0)
+  account   account   @relation(fields: [writer], references: [nickname], onDelete: Cascade, onUpdate: Cascade)
+  comments  comment[]
+  images    postImage[]   
+
+  @@id([boardNo, writer])
+}
+
+model comment {
+  id          BigInt   @unique @default(autoincrement())
+  boardNo     BigInt
+  nickname    String   @db.VarChar(30)
+  comment     String   @db.Text
+  commentDate DateTime @db.DateTime(0)
+  account     account  @relation(fields: [nickname], references: [nickname], onDelete: Cascade, onUpdate:Cascade)
+  board       board    @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade)
+
+  @@id([id, boardNo])
+}
+
+model memberofteam {
+  memberBoardNo    BigInt  @id @default(autoincrement())
+  memberName       String  @db.VarChar(20)
+  introduceContent String? @db.Text
+  image            memberImage?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model memberImage {
+  memberBoardNo BigInt        @unique
+  fileName      String        @id @db.VarChar(100)
+  memberofteam  memberofteam? @relation(fields: [memberBoardNo], references: [memberBoardNo], onDelete: Cascade)
+}
+
+model postImage {
+  boardNo       BigInt        @db.BigInt
+  fileName      String        @id @db.VarChar(100)
+  board         board?        @relation(fields: [boardNo], references: [boardNo], onDelete: Cascade, onUpdate: Cascade)
+}

@@ -1,21 +1,40 @@
-const NUM_OF_POST_PER_PAGE = 2;
+const NUM_OF_POST_PER_PAGE = 21;
 
-module.exports = (prisma, status) =>
-  async (page) => {
-    // 글 정보 조회
+module.exports = (prisma, status, serializing) =>
+  async (req, res) => {
     try {
-      const skip = page ? (page - 1) * NUM_OF_POST_PER_PAGE : page;
+      const { page } = req.query;
 
-      const posts = await prisma.board.findMany({
-        skip: skip,
-        take: NUM_OF_POST_PER_PAGE
-      });
+      let posts;
+
+      if (page) {
+        const skip = page ? (page - 1) * NUM_OF_POST_PER_PAGE : page;
+
+        posts = await prisma.board.findMany({
+          skip: skip,
+          take: NUM_OF_POST_PER_PAGE
+        });
+      }
+      // query 에 값이 없다면 유저의 글 조회
+      else {
+        const { nickname } = req.headers;
+
+        if (!nickname) {
+          return status.UnprocessableEntity;
+        };
+
+        posts = await prisma.board.findMany({
+          where: {
+            writer: nickname
+          }
+        });
+      };
 
       let images;
       // 이미지 url 가져오기
       for (const post of posts) {
         const boardNo = post.boardNo;
-        images = await prisma.image.findMany({
+        images = await prisma.postImage.findMany({
           where: {
             board: { boardNo }
           }
@@ -27,17 +46,15 @@ module.exports = (prisma, status) =>
         if (images.length) {
           for (const image of images) {
             imageFiles.push(image);
-          }
-        }
-        post.fileName = imageFiles;
-      }
+          };
+        };
 
-      const serializedPosts = JSON.stringify(posts, (key, value) => {
-        if (typeof value === 'bigint') {
-          return Number(value); // BigInt to Number
-        }
-        return value;
-      });
+        const imageUrls = imageFiles.map((image) => image.fileName);
+
+        post.fileName = imageUrls;
+      };
+
+      const serializedPosts = serializing(posts);
 
       return {
         status: 200,
@@ -47,5 +64,5 @@ module.exports = (prisma, status) =>
     } catch (error) {
       console.log(error);
       return status.InternalServerError;
-    }
-  }
+    };
+  };
